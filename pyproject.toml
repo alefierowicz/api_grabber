@@ -7,10 +7,13 @@ authors = [
     { name = "marcel-alefierowicz", email = "mrclalefierowicz@gmail.com" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "aiohttp>=3.14.5",
+    "asyncio>=4.0.0",
+]
 
 [project.scripts]
-api-grabber = "api_grabber:main"
+api-grabber = "api_grabber:run"
 
 [build-system]
 requires = ["uv_build>=0.13.7,<0.14.0"]
