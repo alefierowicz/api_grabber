@@ -1,0 +1,7 @@
+{
+	"wAPI_config":{
+		"API_KEY": "weatherAPI key here"
+	}, "owm_config": {
+		"API_KEY": "OpenWeatherMap API key here"
+	}
+}
