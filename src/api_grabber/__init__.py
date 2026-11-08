@@ -34,7 +34,7 @@ def get_OpenWeatherMap_url() -> str:
     return tgt_url
 
 
-async def main() -> none:
+async def main() -> None:
     weatherAPI_tgt: str = get_WeatherAPI_url()
     openWeatherMap_tgt: str = get_OpenWeatherMap_url()
 
@@ -42,7 +42,7 @@ async def main() -> none:
         tasks = [fetch(session, openWeatherMap_tgt), fetch(session, weatherAPI_tgt)]
         result = await asyncio.gather(*tasks)
 
-def run() -> none:
+def run() -> None:
     asyncio.run(main())
 
 if __name__ == '__main__':
