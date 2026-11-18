@@ -10,13 +10,13 @@ async def fetch(session, url) -> None:
         print(f"got back: {data}\n\n\n")
         return data
 
-def get_API_key(config: str) -> str:
+def get_API_key(config: str) -> str | None:
     with open('config.json') as f:
         match config:
             case "wAPI_config":
-                api_key = json.load(f)[config]['API_KEY']
+                api_key: str= json.load(f)[config]['API_KEY']
             case "owm_config":
-                api_key = json.load(f)[config]['API_KEY']
+                api_key:str = json.load(f)[config]['API_KEY']
             case _:
                 api_key = None
         return api_key
