@@ -1,3 +1,4 @@
+"""testing weather fetcher on mock sources"""
 from weather_fetcher import build_params
 
 LOCATION = {"name": "Białystok", "lat": 53.1333, "lon": 23.1643}

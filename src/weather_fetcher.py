@@ -12,4 +12,5 @@ async def fetch(session, source: dict, location: dict) -> dict:
     async with session.get(source["url"], params=params, headers=source.get("headers")) as response:
         data = await response.json()
         print(f"[{source['name']} / {location['name']}] got back: {data}\n")
+        
         return {"source": source["name"], "location": location["name"], "data": data}
