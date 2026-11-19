@@ -1,30 +1,40 @@
 """testing weather fetcher on mock sources"""
-from weather_fetcher import build_params
+import pytest
+
+from weather_fetcher import build_params, fetch
 
 LOCATION = {"name": "Białystok", "lat": 53.1333, "lon": 23.1643}
 
 
-def test_build_params_fills_lat_lon_and_key():
+def test_build_params_fills_placeholders():
     source = {
-        "name": "openweathermap",
+        "name": "weatherapi",
         "api_key": "secret",
-        "params": {"lat": "{lat}", "lon": "{lon}", "appid": "{key}"},
+        "params": {"key": "{key}", "q": "{lat},{lon}", "aqi": "no"},
     }
 
     assert build_params(source, LOCATION) == {
-        "lat": "53.1333",
-        "lon": "23.1643",
-        "appid": "secret",
+        "key": "secret",
+        "q": "53.1333,23.1643",
+        "aqi": "no",
     }
 
 
-def test_build_params_combined_placeholder():
-    source = {"name": "weatherapi", "api_key": "k", "params": {"q": "{lat},{lon}", "aqi": "no"}}
+class TimingOutSession:
+    def get(self, *args, **kwargs):
+        return self
 
-    assert build_params(source, LOCATION) == {"q": "53.1333,23.1643", "aqi": "no"}
+    async def __aenter__(self):
+        raise TimeoutError
+
+    async def __aexit__(self, *exc):
+        return False
 
 
-def test_build_params_without_api_key():
-    source = {"name": "open-meteo", "params": {"latitude": "{lat}", "longitude": "{lon}"}}
+@pytest.mark.asyncio
+async def test_fetch_timeout_returns_error_instead_of_raising():
+    source = {"name": "open-meteo", "url": "https://example.invalid", "params": {"latitude": "{lat}"}}
 
-    assert build_params(source, LOCATION) == {"latitude": "53.1333", "longitude": "23.1643"}
+    result = await fetch(TimingOutSession(), source, LOCATION)
+
+    assert result == {"source": "open-meteo", "location": "Białystok", "data": None, "error": "timeout"}

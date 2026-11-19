@@ -1,20 +1,39 @@
 {
+	"settings": {
+		"timeout_s": 10
+	},
 	"locations": [
-		{ "name": "Białystok", "lat": 53.1333, "lon": 23.1643 },
-		{ "name": "Warszawa", "lat": 52.2297, "lon": 21.0122 }
+		{
+			"name": "Białystok",
+			"lat": 53.1333,
+			"lon": 23.1643
+		},
+		{
+			"name": "Warszawa",
+			"lat": 52.2297,
+			"lon": 21.0122
+		}
 	],
 	"sources": [
 		{
 			"name": "openweathermap",
 			"url": "https://api.openweathermap.org/data/2.5/weather",
 			"api_key": "OpenWeatherMap API key here",
-			"params": { "lat": "{lat}", "lon": "{lon}", "appid": "{key}" }
+			"params": {
+				"lat": "{lat}",
+				"lon": "{lon}",
+				"appid": "{key}"
+			}
 		},
 		{
 			"name": "weatherapi",
 			"url": "https://api.weatherapi.com/v1/current.json",
 			"api_key": "weatherAPI key here",
-			"params": { "key": "{key}", "q": "{lat},{lon}", "aqi": "no" }
+			"params": {
+				"key": "{key}",
+				"q": "{lat},{lon}",
+				"aqi": "no"
+			}
 		},
 		{
 			"name": "open-meteo",

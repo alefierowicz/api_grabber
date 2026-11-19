@@ -1,3 +1,8 @@
+import logging
+
+log = logging.getLogger(__name__)
+
+
 def build_params(source: dict, location: dict) -> dict[str, str]:
     values = {
         "lat": location["lat"],
@@ -8,9 +13,15 @@ def build_params(source: dict, location: dict) -> dict[str, str]:
 
 
 async def fetch(session, source: dict, location: dict) -> dict:
+    result = {"source": source["name"], "location": location["name"], "data": None, "error": None}
     params = build_params(source, location)
-    async with session.get(source["url"], params=params, headers=source.get("headers")) as response:
-        data = await response.json()
-        print(f"[{source['name']} / {location['name']}] got back: {data}\n")
-        
-        return {"source": source["name"], "location": location["name"], "data": data}
+    try:
+        async with session.get(source["url"], params=params, headers=source.get("headers")) as response:
+            result["data"] = await response.json()
+    except TimeoutError:
+        log.warning("%s / %s: request timed out", source["name"], location["name"])
+        result["error"] = "timeout"
+        return result
+
+    print(f"[{source['name']} / {location['name']}] got back: {result['data']}\n")
+    return result

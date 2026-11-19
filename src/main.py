@@ -9,6 +9,7 @@ from weather_fetcher import fetch
 log = logging.getLogger(__name__)
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
+DEFAULT_TIMEOUT_S = 10
 
 
 class ConfigError(Exception):
@@ -19,6 +20,7 @@ def _require_list(config: dict, key: str) -> list:
     value = config.get(key)
     if not isinstance(value, list) or not value:
         raise ConfigError(f"'{key}' must be a non-empty list")
+    
     return value
 
 
@@ -30,6 +32,7 @@ def validate_config(config: dict) -> None:
         for key in ("name", "lat", "lon"):
             if key not in loc:
                 raise ConfigError(f"locations[{i}]: missing '{key}'")
+
         for key in ("lat", "lon"):
             if isinstance(loc[key], bool) or not isinstance(loc[key], (int, float)):
                 raise ConfigError(f"locations[{i}] ({loc['name']}): '{key}' must be a number")
@@ -38,18 +41,28 @@ def validate_config(config: dict) -> None:
         for key in ("name", "url", "params"):
             if key not in src:
                 raise ConfigError(f"sources[{i}]: missing '{key}'")
+            
         if not isinstance(src["params"], dict):
             raise ConfigError(f"sources[{i}] ({src['name']}): 'params' must be an object")
+
+    settings = config.get("settings", {})
+    if not isinstance(settings, dict):
+        raise ConfigError("'settings' must be an object")
+    timeout = settings.get("timeout_s", DEFAULT_TIMEOUT_S)
+    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or timeout <= 0:
+        raise ConfigError("settings.timeout_s must be a positive number")
 
 
 def load_config(path: Path = DEFAULT_CONFIG_PATH) -> dict:
     try:
         with open(path, encoding="utf-8") as f:
             config = json.load(f)
+
     except FileNotFoundError:
         raise ConfigError(
             f"config file not found: {path} (copy config.example.json to config.json)"
         ) from None
+    
     except json.JSONDecodeError as e:
         raise ConfigError(
             f"invalid JSON in {path}, line {e.lineno} column {e.colno}: {e.msg}"
@@ -64,8 +77,10 @@ def load_config(path: Path = DEFAULT_CONFIG_PATH) -> dict:
 
 async def main() -> None:
     config = load_config()
+    timeout_s = config.get("settings", {}).get("timeout_s", DEFAULT_TIMEOUT_S)
+    log.info("Request timeout: %ss", timeout_s)
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout_s)) as session:
         tasks = [
             fetch(session, source, location)
             for location in config["locations"]
