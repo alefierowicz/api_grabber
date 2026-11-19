@@ -2,12 +2,13 @@
 import copy
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from main import ConfigError, load_config
 
-SAMPLE_CONFIG = {
+SAMPLE_CONFIG: dict[str, Any] = {
     "locations": [{"name": "Białystok", "lat": 53.1333, "lon": 23.1643}],
     "sources": [
         {

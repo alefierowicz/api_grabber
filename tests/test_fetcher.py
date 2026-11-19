@@ -38,3 +38,29 @@ async def test_fetch_timeout_returns_error_instead_of_raising():
     result = await fetch(TimingOutSession(), source, LOCATION)
 
     assert result == {"source": "open-meteo", "location": "Białystok", "data": None, "error": "timeout"}
+
+
+class ErrorResponseSession:
+    status = 401
+
+    def get(self, *args, **kwargs):
+        return self
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exc):
+        return False
+
+    async def text(self):
+        return '{"message": "Invalid API key"}'
+
+
+@pytest.mark.asyncio
+async def test_fetch_http_error_returns_error():
+    source = {"name": "openweathermap", "url": "https://example.invalid", "params": {}}
+
+    result = await fetch(ErrorResponseSession(), source, LOCATION)
+
+    assert result["data"] is None
+    assert result["error"] == "HTTP 401"
