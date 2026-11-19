@@ -1,6 +1,9 @@
 """Normalization & aggregation of weather data from multiple sources"""
+import logging
 from dataclasses import dataclass
 from typing import Any
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -65,3 +68,32 @@ def normalize_open_meteo(data: dict[str, Any], location: str) -> WeatherReading:
         wind_ms=current.get("wind_speed_10m"),
         description=None,
     )
+
+
+NORMALIZERS = {
+    "openweathermap": normalize_owm,
+    "weatherapi": normalize_weatherapi,
+    "open-meteo": normalize_open_meteo,
+}
+
+
+def normalize_all(results: list[dict[str, Any]]) -> list[WeatherReading]:
+    readings = []
+    for result in results:
+        source, location = result["source"], result["location"]
+
+        if result["error"] is not None:
+            log.info("%s / %s: skipped (%s)", source, location, result["error"])
+            continue
+
+        normalizer = NORMALIZERS.get(source)
+        if normalizer is None:
+            log.warning("%s / %s: no normalizer for source '%s'", source, location, source)
+            continue
+
+        try:
+            readings.append(normalizer(result["data"], location))
+        except (KeyError, IndexError, TypeError, AttributeError) as e:
+            log.warning("%s / %s: unexpected response shape (%r)", source, location, e)
+
+    return readings

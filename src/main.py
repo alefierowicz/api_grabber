@@ -4,6 +4,7 @@ import json
 import logging
 import sys
 from pathlib import Path
+from data_processor import normalize_all
 from weather_fetcher import fetch
 
 log = logging.getLogger(__name__)
@@ -87,6 +88,11 @@ async def main() -> None:
             for source in config["sources"]
         ]
         results = await asyncio.gather(*tasks)
+
+    readings = normalize_all(results)
+    log.info("Normalized %d of %d results", len(readings), len(results))
+    for reading in readings:
+        print(reading)
 
 def run() -> None:
     logging.basicConfig(

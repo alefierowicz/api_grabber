@@ -37,5 +37,4 @@ async def fetch(session, source: dict, location: dict) -> dict:
         result["error"] = "connection error"
         return result
 
-    print(f"[{source['name']} / {location['name']}] got back: {result['data']}\n")
     return result
