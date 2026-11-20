@@ -3,8 +3,10 @@ import asyncio
 import json
 import logging
 import sys
+import time
 from pathlib import Path
-from data_processor import normalize_all
+from data_processor import aggregate, normalize_all
+from report import print_report
 from weather_fetcher import fetch
 
 log = logging.getLogger(__name__)
@@ -87,12 +89,21 @@ async def main() -> None:
             for location in config["locations"]
             for source in config["sources"]
         ]
+        start = time.perf_counter()
         results = await asyncio.gather(*tasks)
+        total_s = time.perf_counter() - start
+
+    request_sum_s = sum(r["elapsed_s"] for r in results)
+    log.info(
+        "Fetched %d requests in %.2fs (sum of individual requests: %.2fs)",
+        len(results), total_s, request_sum_s,
+    )
 
     readings = normalize_all(results)
     log.info("Normalized %d of %d results", len(readings), len(results))
-    for reading in readings:
-        print(reading)
+
+    summary = aggregate(readings)
+    print_report(readings, summary, results, total_s)
 
 def run() -> None:
     logging.basicConfig(

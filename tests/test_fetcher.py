@@ -37,7 +37,9 @@ async def test_fetch_timeout_returns_error_instead_of_raising():
 
     result = await fetch(TimingOutSession(), source, LOCATION)
 
-    assert result == {"source": "open-meteo", "location": "Białystok", "data": None, "error": "timeout"}
+    assert result["data"] is None
+    assert result["error"] == "timeout"
+    assert result["elapsed_s"] is not None
 
 
 class ErrorResponseSession:

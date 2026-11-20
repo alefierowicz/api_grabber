@@ -17,6 +17,7 @@ class WeatherReading:
     pressure_hpa: float | None
     wind_ms: float | None
     description: str | None
+    elapsed_s: float | None = None
 
 
 def kelvin_to_celsius(k: float) -> float:
@@ -94,7 +95,9 @@ def normalize_all(results: list[dict[str, Any]]) -> list[WeatherReading]:
             continue
 
         try:
-            readings.append(normalizer(result["data"], location))
+            reading = normalizer(result["data"], location)
+            reading.elapsed_s = result.get("elapsed_s")
+            readings.append(reading)
         except (KeyError, IndexError, TypeError, AttributeError) as e:
             log.warning("%s / %s: unexpected response shape (%r)", source, location, e)
 
