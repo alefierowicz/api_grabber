@@ -14,10 +14,18 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "hypothesis>=6.170.17",
     "pytest>=9.2.0",
     "pytest-asyncio>=1.5.0",
+    "pytest-html>=4.2.0",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 asyncio_default_fixture_loop_scope = "function"
+addopts = "--strict-markers"
+markers = [
+    "config: config loading and validation",
+    "fetcher: http fetching with a mocked session",
+    "processor: normalization and aggregation",
+]
