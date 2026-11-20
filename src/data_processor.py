@@ -1,6 +1,8 @@
 """Normalization & aggregation of weather data from multiple sources"""
 import logging
+from collections import defaultdict
 from dataclasses import dataclass
+from statistics import mean
 from typing import Any
 
 log = logging.getLogger(__name__)
@@ -97,3 +99,31 @@ def normalize_all(results: list[dict[str, Any]]) -> list[WeatherReading]:
             log.warning("%s / %s: unexpected response shape (%r)", source, location, e)
 
     return readings
+
+
+NUMERIC_FIELDS = ("temp_c", "humidity_pct", "pressure_hpa", "wind_ms")
+
+
+def aggregate(readings: list[WeatherReading]) -> dict[str, dict[str, Any]]:
+    by_location: dict[str, list[WeatherReading]] = defaultdict(list)
+    for reading in readings:
+        by_location[reading.location].append(reading)
+
+    summary: dict[str, dict[str, Any]] = {}
+    for location, group in by_location.items():
+        stats: dict[str, Any] = {}
+        for field in NUMERIC_FIELDS:
+            values = [getattr(r, field) for r in group if getattr(r, field) is not None]
+            if not values:
+                continue
+            stats[field] = {
+                "mean": round(mean(values), 2),
+                "min": min(values),
+                "max": max(values),
+                "spread": round(max(values) - min(values), 2),
+                "n": len(values),
+            }
+        stats["descriptions"] = {r.source: r.description for r in group if r.description is not None}
+        summary[location] = stats
+
+    return summary

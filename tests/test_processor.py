@@ -1,5 +1,6 @@
 from data_processor import (
     WeatherReading,
+    aggregate,
     normalize_all,
     normalize_open_meteo,
     normalize_owm,
@@ -92,3 +93,17 @@ def test_normalize_all_skips_bad_results():
     assert len(readings) == 1
     assert readings[0].source == "openweathermap"
     assert readings[0].location == "Białystok"
+
+
+def test_aggregate_mean_spread_and_skips_none():
+    readings = [
+        WeatherReading("openweathermap", "Białystok", 5.18, 93, 991, 1.79, "overcast clouds"),
+        WeatherReading("weatherapi", "Białystok", 5.2, 91, 992.0, None, "Overcast"),
+        WeatherReading("open-meteo", "Białystok", 5.1, 96, 991.7, 2.8, None),
+    ]
+
+    summary = aggregate(readings)["Białystok"]
+
+    assert summary["temp_c"] == {"mean": 5.16, "min": 5.1, "max": 5.2, "spread": 0.1, "n": 3}
+    assert summary["wind_ms"]["n"] == 2
+    assert summary["descriptions"] == {"openweathermap": "overcast clouds", "weatherapi": "Overcast"}
