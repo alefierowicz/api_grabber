@@ -1,10 +1,12 @@
-import aiohttp
 import asyncio
 import json
 import logging
 import sys
 import time
 from pathlib import Path
+
+import aiohttp
+
 from data_processor import aggregate, normalize_all
 from report import print_report
 from weather_fetcher import fetch
@@ -23,7 +25,7 @@ def _require_list(config: dict, key: str) -> list:
     value = config.get(key)
     if not isinstance(value, list) or not value:
         raise ConfigError(f"'{key}' must be a non-empty list")
-    
+
     return value
 
 
@@ -38,21 +40,29 @@ def validate_config(config: dict) -> None:
 
         for key in ("lat", "lon"):
             if isinstance(loc[key], bool) or not isinstance(loc[key], (int, float)):
-                raise ConfigError(f"locations[{i}] ({loc['name']}): '{key}' must be a number")
+                raise ConfigError(
+                    f"locations[{i}] ({loc['name']}): '{key}' must be a number"
+                )
 
     for i, src in enumerate(_require_list(config, "sources")):
         for key in ("name", "url", "params"):
             if key not in src:
                 raise ConfigError(f"sources[{i}]: missing '{key}'")
-            
+
         if not isinstance(src["params"], dict):
-            raise ConfigError(f"sources[{i}] ({src['name']}): 'params' must be an object")
+            raise ConfigError(
+                f"sources[{i}] ({src['name']}): 'params' must be an object"
+            )
 
     settings = config.get("settings", {})
     if not isinstance(settings, dict):
         raise ConfigError("'settings' must be an object")
     timeout = settings.get("timeout_s", DEFAULT_TIMEOUT_S)
-    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or timeout <= 0:
+    if (
+        isinstance(timeout, bool)
+        or not isinstance(timeout, (int, float))
+        or timeout <= 0
+    ):
         raise ConfigError("settings.timeout_s must be a positive number")
 
 
@@ -65,7 +75,7 @@ def load_config(path: Path = DEFAULT_CONFIG_PATH) -> dict:
         raise ConfigError(
             f"config file not found: {path} (copy config.example.json to config.json)"
         ) from None
-    
+
     except json.JSONDecodeError as e:
         raise ConfigError(
             f"invalid JSON in {path}, line {e.lineno} column {e.colno}: {e.msg}"
@@ -74,16 +84,21 @@ def load_config(path: Path = DEFAULT_CONFIG_PATH) -> dict:
     validate_config(config)
     log.info(
         "Loaded config from %s: %d locations, %d sources",
-        path, len(config["locations"]), len(config["sources"]),
+        path,
+        len(config["locations"]),
+        len(config["sources"]),
     )
     return config
+
 
 async def main() -> None:
     config = load_config()
     timeout_s = config.get("settings", {}).get("timeout_s", DEFAULT_TIMEOUT_S)
     log.info("Request timeout: %ss", timeout_s)
 
-    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout_s)) as session:
+    async with aiohttp.ClientSession(
+        timeout=aiohttp.ClientTimeout(total=timeout_s)
+    ) as session:
         tasks = [
             fetch(session, source, location)
             for location in config["locations"]
@@ -96,7 +111,9 @@ async def main() -> None:
     request_sum_s = sum(r["elapsed_s"] for r in results)
     log.info(
         "Fetched %d requests in %.2fs (sum of individual requests: %.2fs)",
-        len(results), total_s, request_sum_s,
+        len(results),
+        total_s,
+        request_sum_s,
     )
 
     readings = normalize_all(results)
@@ -104,6 +121,7 @@ async def main() -> None:
 
     summary = aggregate(readings)
     print_report(readings, summary, results, total_s)
+
 
 def run() -> None:
     logging.basicConfig(
@@ -116,5 +134,6 @@ def run() -> None:
         log.error("Config error: %s", e)
         sys.exit(1)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     run()

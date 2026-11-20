@@ -1,4 +1,5 @@
 """testing weather fetcher on mock sources"""
+
 import pytest
 
 from weather_fetcher import build_params, fetch
@@ -33,7 +34,11 @@ class TimingOutSession:
 
 @pytest.mark.asyncio
 async def test_fetch_timeout_returns_error_instead_of_raising():
-    source = {"name": "open-meteo", "url": "https://example.invalid", "params": {"latitude": "{lat}"}}
+    source = {
+        "name": "open-meteo",
+        "url": "https://example.invalid",
+        "params": {"latitude": "{lat}"},
+    }
 
     result = await fetch(TimingOutSession(), source, LOCATION)
 

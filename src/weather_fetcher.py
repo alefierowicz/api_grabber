@@ -12,7 +12,9 @@ def build_params(source: dict, location: dict) -> dict[str, str]:
         "lon": location["lon"],
         "key": source.get("api_key", ""),
     }
-    return {name: template.format(**values) for name, template in source["params"].items()}
+    return {
+        name: template.format(**values) for name, template in source["params"].items()
+    }
 
 
 async def fetch(session, source: dict, location: dict) -> dict:
@@ -26,12 +28,17 @@ async def fetch(session, source: dict, location: dict) -> dict:
     params = build_params(source, location)
     start = time.perf_counter()
     try:
-        async with session.get(source["url"], params=params, headers=source.get("headers")) as response:
+        async with session.get(
+            source["url"], params=params, headers=source.get("headers")
+        ) as response:
             if response.status >= 400:
                 body = await response.text()
                 log.warning(
                     "%s / %s: HTTP %d: %s",
-                    source["name"], location["name"], response.status, body[:200],
+                    source["name"],
+                    location["name"],
+                    response.status,
+                    body[:200],
                 )
                 result["error"] = f"HTTP {response.status}"
             else:
@@ -40,7 +47,9 @@ async def fetch(session, source: dict, location: dict) -> dict:
         log.warning("%s / %s: request timed out", source["name"], location["name"])
         result["error"] = "timeout"
     except aiohttp.ClientConnectionError as e:
-        log.warning("%s / %s: connection error: %s", source["name"], location["name"], e)
+        log.warning(
+            "%s / %s: connection error: %s", source["name"], location["name"], e
+        )
         result["error"] = "connection error"
 
     result["elapsed_s"] = round(time.perf_counter() - start, 3)

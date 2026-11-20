@@ -1,4 +1,5 @@
 """Normalization & aggregation of weather data from multiple sources"""
+
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
@@ -91,7 +92,9 @@ def normalize_all(results: list[dict[str, Any]]) -> list[WeatherReading]:
 
         normalizer = NORMALIZERS.get(source)
         if normalizer is None:
-            log.warning("%s / %s: no normalizer for source '%s'", source, location, source)
+            log.warning(
+                "%s / %s: no normalizer for source '%s'", source, location, source
+            )
             continue
 
         try:
@@ -126,7 +129,9 @@ def aggregate(readings: list[WeatherReading]) -> dict[str, dict[str, Any]]:
                 "spread": round(max(values) - min(values), 2),
                 "n": len(values),
             }
-        stats["descriptions"] = {r.source: r.description for r in group if r.description is not None}
+        stats["descriptions"] = {
+            r.source: r.description for r in group if r.description is not None
+        }
         summary[location] = stats
 
     return summary

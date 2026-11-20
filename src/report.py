@@ -21,7 +21,9 @@ def fmt(value: float | None, digits: int = 2) -> str:
     return f"{value:.{digits}f}"
 
 
-def build_table(location: str, readings: list[WeatherReading], stats: dict[str, Any]) -> Table:
+def build_table(
+    location: str, readings: list[WeatherReading], stats: dict[str, Any]
+) -> Table:
     table = Table(title=location, title_style="bold")
     table.add_column("Source")
     for field in NUMERIC_FIELDS:
@@ -41,7 +43,10 @@ def build_table(location: str, readings: list[WeatherReading], stats: dict[str, 
     for stat in ("mean", "spread"):
         table.add_row(
             f"[bold]{stat}[/bold]",
-            *(fmt(stats[field][stat], DIGITS[field]) if field in stats else "—" for field in NUMERIC_FIELDS),
+            *(
+                fmt(stats[field][stat], DIGITS[field]) if field in stats else "—"
+                for field in NUMERIC_FIELDS
+            ),
             "",
             "",
         )
@@ -65,7 +70,9 @@ def print_report(
     if failed:
         console.print("[bold red]Failed:[/bold red]")
         for r in failed:
-            console.print(f"  {r['source']} / {r['location']}: {r['error']} after {r['elapsed_s']:.2f}s")
+            console.print(
+                f"  {r['source']} / {r['location']}: {r['error']} after {r['elapsed_s']:.2f}s"
+            )
     else:
         console.print("Failed: none")
 
