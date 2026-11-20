@@ -1,3 +1,5 @@
+"""load config, fetch weather data concurrently, print a report"""
+
 import asyncio
 import json
 import logging
@@ -18,10 +20,11 @@ DEFAULT_TIMEOUT_S = 10
 
 
 class ConfigError(Exception):
-    pass
+    """raised when config.json is missing, malformed or invalid"""
 
 
 def _require_list(config: dict, key: str) -> list:
+    """return config[key] if it is a non-empty list, otherwise raise ConfigError"""
     value = config.get(key)
     if not isinstance(value, list) or not value:
         raise ConfigError(f"'{key}' must be a non-empty list")
@@ -30,6 +33,7 @@ def _require_list(config: dict, key: str) -> list:
 
 
 def validate_config(config: dict) -> None:
+    """check that locations, sources and settings have the expected shape and types"""
     if not isinstance(config, dict):
         raise ConfigError("top level must be a JSON object")
 
@@ -67,6 +71,7 @@ def validate_config(config: dict) -> None:
 
 
 def load_config(path: Path = DEFAULT_CONFIG_PATH) -> dict:
+    """read, parse and validate the json config file"""
     try:
         with open(path, encoding="utf-8") as f:
             config = json.load(f)
@@ -92,6 +97,7 @@ def load_config(path: Path = DEFAULT_CONFIG_PATH) -> dict:
 
 
 async def main() -> None:
+    """fetch all sources for all locations concurrently, then process and print"""
     config = load_config()
     timeout_s = config.get("settings", {}).get("timeout_s", DEFAULT_TIMEOUT_S)
     log.info("Request timeout: %ss", timeout_s)
@@ -124,6 +130,7 @@ async def main() -> None:
 
 
 def run() -> None:
+    """set up logging and run the app, exiting with code 1 on config errors"""
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",

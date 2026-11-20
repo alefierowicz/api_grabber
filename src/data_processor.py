@@ -1,4 +1,4 @@
-"""Normalization & aggregation of weather data from multiple sources"""
+"""normalization and aggregation of weather data from multiple sources"""
 
 import logging
 from collections import defaultdict
@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class WeatherReading:
+    """one reading from one source for one location, in common units"""
     source: str
     location: str
     temp_c: float | None
@@ -22,14 +23,17 @@ class WeatherReading:
 
 
 def kelvin_to_celsius(k: float) -> float:
+    """convert kelvin to degrees celsius"""
     return round(k - 273.15, 2)
 
 
 def kph_to_ms(kph: float) -> float:
+    """convert km/h to m/s"""
     return round(kph / 3.6, 2)
 
 
 def normalize_owm(data: dict[str, Any], location: str) -> WeatherReading:
+    """convert an openweathermap response into a WeatherReading"""
     main = data["main"]
     temp_k = main.get("temp")
     weather = data.get("weather") or []
@@ -46,6 +50,7 @@ def normalize_owm(data: dict[str, Any], location: str) -> WeatherReading:
 
 
 def normalize_weatherapi(data: dict[str, Any], location: str) -> WeatherReading:
+    """convert a weatherapi response into a WeatherReading"""
     current = data["current"]
     wind_kph = current.get("wind_kph")
 
@@ -61,6 +66,7 @@ def normalize_weatherapi(data: dict[str, Any], location: str) -> WeatherReading:
 
 
 def normalize_open_meteo(data: dict[str, Any], location: str) -> WeatherReading:
+    """convert an open-meteo response into a WeatherReading"""
     current = data["current"]
 
     return WeatherReading(
@@ -82,6 +88,7 @@ NORMALIZERS = {
 
 
 def normalize_all(results: list[dict[str, Any]]) -> list[WeatherReading]:
+    """normalize successful fetch results, skipping failed, unknown or malformed ones"""
     readings = []
     for result in results:
         source, location = result["source"], result["location"]
@@ -111,6 +118,7 @@ NUMERIC_FIELDS = ("temp_c", "humidity_pct", "pressure_hpa", "wind_ms")
 
 
 def aggregate(readings: list[WeatherReading]) -> dict[str, dict[str, Any]]:
+    """group readings by location and compute mean, min, max, spread and n per field"""
     by_location: dict[str, list[WeatherReading]] = defaultdict(list)
     for reading in readings:
         by_location[reading.location].append(reading)

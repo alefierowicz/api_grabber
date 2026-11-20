@@ -1,3 +1,5 @@
+"""async fetching of raw weather data from the configured apis"""
+
 import logging
 import time
 
@@ -7,6 +9,7 @@ log = logging.getLogger(__name__)
 
 
 def build_params(source: dict, location: dict) -> dict[str, str]:
+    """fill the {lat}, {lon} and {key} placeholders in a source's query params"""
     values = {
         "lat": location["lat"],
         "lon": location["lon"],
@@ -18,6 +21,10 @@ def build_params(source: dict, location: dict) -> dict[str, str]:
 
 
 async def fetch(session, source: dict, location: dict) -> dict:
+    """fetch one source for one location as a dict with data, error and elapsed_s
+
+    timeouts, connection and http errors are logged and stored in error, not raised
+    """
     result = {
         "source": source["name"],
         "location": location["name"],

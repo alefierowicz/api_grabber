@@ -1,3 +1,5 @@
+"""console output of the weather comparison as rich tables"""
+
 from typing import Any
 
 from rich.console import Console
@@ -16,6 +18,7 @@ DIGITS = {"temp_c": 2, "humidity_pct": 1, "pressure_hpa": 1, "wind_ms": 2}
 
 
 def fmt(value: float | None, digits: int = 2) -> str:
+    """format a number with the given decimals, or a dash when it is missing"""
     if value is None:
         return "—"
     return f"{value:.{digits}f}"
@@ -24,6 +27,7 @@ def fmt(value: float | None, digits: int = 2) -> str:
 def build_table(
     location: str, readings: list[WeatherReading], stats: dict[str, Any]
 ) -> Table:
+    """build a table for one location with a row per source plus mean and spread"""
     table = Table(title=location, title_style="bold")
     table.add_column("Source")
     for field in NUMERIC_FIELDS:
@@ -59,6 +63,7 @@ def print_report(
     results: list[dict[str, Any]],
     total_s: float,
 ) -> None:
+    """print one table per location, then failed requests and timing totals"""
     console = Console()
 
     for location, stats in summary.items():
